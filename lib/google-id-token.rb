@@ -41,7 +41,8 @@ module GoogleIDToken
   class Validator
     include MonitorMixin
 
-    GOOGLE_CERTS_URI = 'https://www.googleapis.com/oauth2/v1/certs'
+    # https://firebase.google.com/docs/auth/admin/verify-id-tokens
+    GOOGLE_CERTS_URI = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
     GOOGLE_CERTS_EXPIRY = 3600 # 1 hour
 
     # https://developers.google.com/identity/sign-in/web/backend-auth
@@ -62,6 +63,7 @@ module GoogleIDToken
       end
 
       @certs_expiry = options.fetch(:expiry, GOOGLE_CERTS_EXPIRY)
+      @issuers = options.fetch(:issuers, GOOGLE_ISSUERS)
     end
 
     ##
@@ -138,7 +140,7 @@ module GoogleIDToken
         if cid && payload['cid'] != cid
           raise ClientIDMismatchError, 'Token client-id mismatch'
         end
-        if !GOOGLE_ISSUERS.include?(payload['iss'])
+        if !@issuers.include?(payload['iss'])
           raise InvalidIssuerError, 'Token issuer mismatch'
         end
         payload
